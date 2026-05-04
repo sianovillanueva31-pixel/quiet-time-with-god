@@ -1,43 +1,112 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>A Quiet Time with God</title>
-  <link rel="stylesheet" href="style.css">
+// 🔥 IMPORT FIREBASE (MODULAR)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-</head>
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<body>
-  <div class="container">
-    <h1>🌿 A Quiet Time with God</h1>
+// 🔥 YOUR CONFIG (PUT YOUR REAL KEYS HERE)
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+};
 
-    <div id="auth">
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
-      <button onclick="signup()">Sign Up</button>
-      <button onclick="login()">Login</button>
-      <button onclick="logout()">Logout</button>
-    </div>
+// INIT
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    <div id="app" style="display:none;">
-      <input id="title" placeholder="Diary Title">
-      <textarea id="entry" placeholder="Write your reflections..."></textarea>
-      <textarea id="prayer" placeholder="Write your prayer..."></textarea>
+// SIGNUP
+window.signup = async function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-      <label>
-        <input type="checkbox" id="completed"> Mark as Completed
-      </label>
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    alert("Account created!");
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
-      <button onclick="saveEntry()">Save Entry</button>
+// LOGIN
+window.login = async function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-      <h2>Your Entries</h2>
-      <div id="entries"></div>
-    </div>
-  </div>
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
-  <script src="script.js"></script>
-</body>
-</html>
+// LOGOUT
+window.logout = function () {
+  signOut(auth);
+};
+
+// AUTH STATE
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("app").style.display = "block";
+    loadEntries(user);
+  } else {
+    document.getElementById("app").style.display = "none";
+  }
+});
+
+// SAVE ENTRY
+window.saveEntry = async function () {
+  const user = auth.currentUser;
+
+  try {
+    await addDoc(collection(db, "users", user.uid, "entries"), {
+      title: document.getElementById("title").value,
+      entry: document.getElementById("entry").value,
+      prayer: document.getElementById("prayer").value,
+      completed: document.getElementById("completed").checked,
+      date: new Date()
+    });
+
+    alert("Saved!");
+    loadEntries(user);
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+// LOAD ENTRIES
+async function loadEntries(user) {
+  const container = document.getElementById("entries");
+  container.innerHTML = "";
+
+  const q = query(collection(db, "users", user.uid, "entries"), orderBy("date", "desc"));
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach(doc => {
+    const d = doc.data();
+
+    container.innerHTML += `
+      <div class="entry">
+        <h3>${d.title}</h3>
+        <p>${d.entry}</p>
+        <p><b>Prayer:</b> ${d.prayer}</p>
+        <p>✅ Completed: ${d.completed}</p>
+      </div>
+    `;
+  });
+}
