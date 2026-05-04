@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>A Quiet Time with God</title>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🌿 A Quiet Time with God</h1>
+
+    <div id="auth">
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="signup()">Sign Up</button>
+      <button onclick="login()">Login</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+
+    <div id="app" style="display:none;">
+      <input id="title" placeholder="Diary Title">
+      <textarea id="entry" placeholder="Write your reflections..."></textarea>
+      <textarea id="prayer" placeholder="Write your prayer..."></textarea>
+
+      <label>
+        <input type="checkbox" id="completed"> Mark as Completed
+      </label>
+
+      <button onclick="saveEntry()">Save Entry</button>
+
+      <h2>Your Entries</h2>
+      <div id="entries"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
